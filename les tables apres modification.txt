@@ -1,0 +1,73 @@
+-- Les donnees du table eleve 
+INSERT ALL 
+INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(1, 'Laine', 'Dieunineken', TO_DATE('1998-08-19', 'YYYY-MM-DD'), '34567890', TO_DATE('2022-09-01', 'YYYY-MM-DD'), TO_DATE('2022-12-01', 'YYYY-MM-DD'))
+  INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(2, 'Francois', 'Eddy', TO_DATE('2000-08-20', 'YYYY-MM-DD'), '36543210', TO_DATE('2021-08-28', 'YYYY-MM-DD'), TO_DATE('2021-10-01', 'YYYY-MM-DD'))
+ INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES (3, 'Adan', 'Mirtha', TO_DATE('1997-04-10', 'YYYY-MM-DD'), '55456778', TO_DATE('2017-04-05', 'YYYY-MM-DD'), TO_DATE('2017-05-08', 'YYYY-MM-DD'))
+  INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(4, 'Jean', 'Gregorie', TO_DATE('2009-09-25', 'YYYY-MM-DD'), '47679710', TO_DATE('2022-08-31', 'YYYY-MM-DD'), TO_DATE('2022-09-30', 'YYYY-MM-DD'))
+  INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(5, 'Joseph', 'Sophia', TO_DATE('2010-11-08', 'YYYY-MM-DD'), '38847700', TO_DATE('2019-07-10', 'YYYY-MM-DD'), TO_DATE('2023-09-25', 'YYYY-MM-DD'))
+
+SELECT 1 FROM DUAL;
+
+-- Les donnees du table Inscription 
+INSERT ALL 
+INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(1, TO_DATE('2022-12-04', 'YYYY-MM-DD'), 'classique', TO_DATE('2022-09-01', 'YYYY-MM-DD'), 'reussi', 'A01', 1)
+ INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(2, TO_DATE('2021-10-04', 'YYYY-MM-DD'), 'supervise', TO_DATE('2021-10-21', 'YYYY-MM-DD'), 'reussi', 'A02', 2)
+ INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(3, TO_DATE('2017-05-12', 'YYYY-MM-DD'), 'supervise', TO_DATE('2017-06-11', 'YYYY-MM-DD'), 'echouee', 'A03', 3)
+ INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(4, TO_DATE('2022-10-04', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2022-10-28', 'YYYY-MM-DD'), 'reussi', 'A04', 4)
+ INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(5, TO_DATE('2023-09-29', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2023-10-24', 'YYYY-MM-DD'), 'reussi', 'A05', 5)
+
+SELECT 1 FROM DUAL;
+
+-- Les donnees du table Trajet 
+INSERT ALL 
+INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(1, TO_DATE('2022-12-27', 'YYYY-MM-DD'), 30.5, 'Ville', 1)
+  INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(2, TO_DATE('2021-10-28', 'YYYY-MM-DD'), 45.2, 'Autoroute', 2)
+  INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(3, TO_DATE('2017-06-22', 'YYYY-MM-DD'), 20.8, 'Ville', 3)
+  INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(4, TO_DATE('2022-11-14', 'YYYY-MM-DD'), 35.7, 'Autoroute', 4)
+  INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(5, TO_DATE('2023-10-30', 'YYYY-MM-DD'), 28.3, 'Ville', 5)
+
+SELECT 1 FROM DUAL;
+
+-- Les donnees du table Moniteur 
+INSERT ALL
+INTO moniteur (m_id, m_nom, m_prenom)
+VALUES(1, 'Lajoie', 'Michael'),
+  INTO moniteur (m_id, m_nom, m_prenom)
+VALUES(2, 'Pierre', 'Sarah'),
+  INTO moniteur (m_id, m_nom, m_prenom)
+VALUES(3, 'Jean_baptiste', 'Daniel')
+  INTO moniteur (m_id, m_nom, m_prenom)
+VALUES(4, 'St_fleur', 'Jennifer')
+  INTO moniteur (m_id, m_nom, m_prenom)
+VALUES(5, 'Martin', 'Christopher')
+
+SELECT 1 FROM DUAL;
+
+INSERT ALL
+INTO lecon (l_id, l_date, l_duree, e_id, m_id)
+VALUES(1, TO_DATE('2022-09-23', 'YYYY-MM-DD'), 1.5, 1, 1)
+  INTO lecon (l_id, l_date, l_duree, e_id, m_id)
+VALUES(2, TO_DATE('2021-09-26', 'YYYY-MM-DD'), 2.0, 2, 2)
+  INTO lecon (l_id, l_date, l_duree, e_id, m_id)
+VALUES(3, TO_DATE('2017-04-27', 'YYYY-MM-DD'), 1.5, 3, 3)
+  INTO lecon (l_id, l_date, l_duree, e_id, m_id)
+VALUES(4, TO_DATE('2022-08-28', 'YYYY-MM-DD'), 2.0, 4, 4)
+  INTO lecon (l_id, l_date, l_duree, e_id, m_id)
+VALUES(5, TO_DATE('2019-07-29', 'YYYY-MM-DD'), 1.5, 5, 5)
+
+SELECT 1 FROM DUAL;
