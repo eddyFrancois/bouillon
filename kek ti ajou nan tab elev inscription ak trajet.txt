@@ -1,0 +1,29 @@
+INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(6, 'Julles', 'Jonas', TO_DATE('2003-11-08', 'YYYY-MM-DD'), '38847700', TO_DATE('2022-07-10', 'YYYY-MM-DD'), TO_DATE('2023-09-25', 'YYYY-MM-DD'));
+
+INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(7, 'John', 'Lamier', TO_DATE('1972-11-08', 'YYYY-MM-DD'), '38847700', TO_DATE('2022-07-10', 'YYYY-MM-DD'), TO_DATE('2023-09-25', 'YYYY-MM-DD'));
+
+INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(6, TO_DATE('2023-01-29', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2023-04-24', 'YYYY-MM-DD'), 'echouee', 'A06', 6)
+INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(7, TO_DATE('2023-01-29', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2023-04-24', 'YYYY-MM-DD'), 'echouee', 'A07',7 )
+
+INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(6, TO_DATE('2022-11-14', 'YYYY-MM-DD'), 35.7, 'Autoroute', 6);
+INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(7, TO_DATE('2023-10-30', 'YYYY-MM-DD'), 28.3, 'Ville', 7);INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(6, 'Julles', 'Jonas', TO_DATE('2003-11-08', 'YYYY-MM-DD'), '38847700', TO_DATE('2022-07-10', 'YYYY-MM-DD'), TO_DATE('2023-09-25', 'YYYY-MM-DD'));
+
+INTO eleve (e_id, e_nom, e_prenom, e_date_naiss, e_tel, e_date_dossier, e_date_code)
+VALUES(7, 'John', 'Lamier', TO_DATE('1972-11-08', 'YYYY-MM-DD'), '38847700', TO_DATE('2022-07-10', 'YYYY-MM-DD'), TO_DATE('2023-09-25', 'YYYY-MM-DD'));
+
+INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(6, TO_DATE('2023-01-29', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2023-04-24', 'YYYY-MM-DD'), 'echouee', 'A06', 6)
+INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id)
+VALUES(7, TO_DATE('2023-01-29', 'YYYY-MM-DD'), 'anticipe', TO_DATE('2023-04-24', 'YYYY-MM-DD'), 'echouee', 'A07',7 )
+
+INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(6, TO_DATE('2022-11-14', 'YYYY-MM-DD'), 35.7, 'Autoroute', 6);
+INTO trajet (t_id, t_date, t_nb_km, t_type, e_id)
+VALUES(7, TO_DATE('2023-10-30', 'YYYY-MM-DD'), 28.3, 'Ville', 7);
