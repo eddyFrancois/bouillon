@@ -1,0 +1,365 @@
+Partie 8 Fonction et Procedure
+-- 8.1
+
+DECLARE
+  v_e_id eleve.e_id%TYPE;
+  v_e_nom eleve.e_nom%TYPE;
+  v_e_prenom eleve.e_prenom%TYPE;
+  v_e_date_naiss eleve.e_date_naiss%TYPE;
+BEGIN
+  -- Saisie de l'identifiant de l'élève
+  v_e_id := &v_e_id; -- L'utilisateur doit saisir l'identifiant de l'élève
+
+  -- Vérifier si l'élève existe
+  SELECT e_nom, e_prenom, e_date_naiss INTO v_e_nom, v_e_prenom, v_e_date_naiss
+  FROM eleve
+  WHERE e_id = v_e_id;
+
+  -- Afficher les détails de l'élève
+  DBMS_OUTPUT.PUT_LINE('Nom de l''élève : ' || v_e_nom);
+  DBMS_OUTPUT.PUT_LINE('Prénom de l''élève : ' || v_e_prenom);
+  DBMS_OUTPUT.PUT_LINE('Date de naissance de l''élève : ' || TO_CHAR(v_e_date_naiss, 'DD-MON-YYYY'));
+EXCEPTION
+  WHEN NO_DATA_FOUND THEN
+    DBMS_OUTPUT.PUT_LINE('Aucun élève trouvé avec l''identifiant ' || v_e_id);
+END;
+/
+
+/*8.2.Ecrire un programme permettant à l’utilisateur de modifier, sauf l’ID, toute autre donnée relative à un élève. 
+L’utilisateur devra choisir la propriété à modifier et saisir la nouvelle valeur de cette propriété et l’ID de l’élève. Dans 
+le cas d’une tentative de modification l’ID de l’élève, le programme devra afficher le message suivant : « Opération
+interdite » dans les autres cas l’affichage sera : « La propriété X de l’élève Y est passée de A à B »*/
+
+DECLARE
+  v_property VARCHAR2(100);
+  v_new_value VARCHAR2(100);
+  v_e_id eleve.e_id%TYPE;
+BEGIN
+  -- Saisie de l'identifiant de l'élève
+  v_e_id := &v_e_id; -- L'utilisateur doit saisir l'identifiant de l'élève
+
+  -- Saisie de la propriété à modifier et de la nouvelle valeur
+  v_property := UPPER('&v_property'); -- L'utilisateur doit saisir la propriété à modifier (en majuscules)
+  v_new_value := '&v_new_value'; -- L'utilisateur doit saisir la nouvelle valeur pour la propriété
+
+  -- Vérifier si la propriété à modifier est 'ID'
+  IF v_property = 'ID' THEN
+    DBMS_OUTPUT.PUT_LINE('Opération interdite.');
+  ELSE
+    -- Mettre à jour la propriété spécifiée
+    EXECUTE IMMEDIATE 'UPDATE eleve SET ' || v_property || ' = :1 WHERE e_id = :2'
+      USING v_new_value, v_e_id;
+
+    DBMS_OUTPUT.PUT_LINE('La propriété ' || v_property || ' de l''élève ' || v_e_id ||
+                         ' est passée de ' || v_property || ' à ' || v_new_value);
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Une erreur s''est produite : ' || SQLERRM);
+END;
+/
+
+-- 8.3
+
+-- Procédure pour inscrire un élève à l'apprentissage de la conduite
+CREATE OR REPLACE PROCEDURE inscrire_conduite(id_eleve IN NUMBER, type_inscription IN VARCHAR2) AS
+  v_age NUMBER;
+  v_date_code DATE;
+BEGIN
+  -- Vérifier si l'élève existe
+  SELECT e_date_naiss, e_date_code
+  INTO v_age, v_date_code
+  FROM eleve
+  WHERE e_id = id_eleve;
+  
+  IF v_age IS NULL THEN
+    RAISE eleve_inconnu;
+  END IF;
+  
+  -- Vérifier les conditions d'âge en fonction du type d'inscription
+  IF (type_inscription = 'L''apprentissage classique' OR type_inscription = 'Conduite supervisée') AND v_age < 18 THEN
+    RAISE pb_age;
+  ELSIF type_inscription = 'L''apprentissage anticipé' AND v_age < 15 THEN
+    RAISE pb_age;
+  END IF;
+  
+  -- Vérifier que l'élève a le code
+  IF v_date_code IS NULL THEN
+    RAISE pas_de_code;
+  END IF;
+  
+  -- Vérifier si l'élève n'est pas déjà inscrit
+  SELECT COUNT(*)
+  INTO v_age
+  FROM inscription
+  WHERE e_id = id_eleve;
+  
+  IF v_age > 0 THEN
+    RETURN; -- Élève déjà inscrit, on ne fait rien
+  END IF;
+  
+  -- Insérer une ligne dans la table INSCRIPTION
+  INSERT INTO inscription (i_id, i_date_inscr, i_type, i_num, e_id)
+  VALUES (seq_inscription.NEXTVAL, SYSDATE, type_inscription, 'A01', id_eleve);
+  
+  -- Mettre à jour le nombre total d'inscriptions de cet élève
+  UPDATE eleve
+  SET e_nb_inscriptions = e_nb_inscriptions + 1
+  WHERE e_id = id_eleve;
+  
+  COMMIT;
+EXCEPTION
+  WHEN eleve_inconnu THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : Elève inconnu.');
+  WHEN pb_age THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : Age non conforme pour l''inscription.');
+  WHEN pas_de_code THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : L''élève n''a pas encore passé le code.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : ' || SQLERRM);
+END inscrire_conduite;
+/
+
+
+--8.2 
+
+-- Procédure pour inscrire un élève à l'examen
+CREATE OR REPLACE PROCEDURE inscrire_examen(id_eleve IN NUMBER) AS
+  v_age NUMBER;
+  v_nb_lecons NUMBER;
+  v_nb_km NUMBER;
+  v_type_inscription VARCHAR2(100);
+  v_date_examen DATE;
+  v_date_prem_exam DATE;
+BEGIN
+  -- Vérifier si l'élève existe
+  SELECT e_date_naiss, e_type_inscription, e_nbh_lecons, e_nb_km
+  INTO v_age, v_type_inscription, v_nb_lecons, v_nb_km
+  FROM eleve
+  WHERE e_id = id_eleve;
+  
+  IF v_age IS NULL THEN
+    RAISE eleve_inconnu;
+  END IF;
+  
+  -- Vérifier que l'élève aura 18 ans à la date de passage de l'examen
+  SELECT i_date_examen
+  INTO v_date_examen
+  FROM inscription
+  WHERE e_id = id_eleve;
+  
+  IF MONTHS_BETWEEN(v_date_examen, SYSDATE) < 216 THEN
+    RAISE pb_age;
+  END IF;
+  
+  -- Vérifier les conditions concernant l'apprentissage
+  IF v_type_inscription = 'Conduite supervisée' AND v_nb_km < 1000 THEN
+    RAISE pb_condition;
+  ELSIF v_type_inscription = 'L''apprentissage anticipé' AND v_nb_km < 3000 THEN
+    RAISE pb_condition;
+  END IF;
+  
+  -- Vérifier s'il est inscrit à la conduite (au moins 20 heures de leçons)
+  IF v_nb_lecons < 20 THEN
+    RAISE pb_condition;
+  END IF;
+  
+  -- Vérifier si l'élève est déjà inscrit à l'examen
+  SELECT i_date_examen
+  INTO v_date_examen
+  FROM inscription
+  WHERE e_id = id_eleve;
+  
+  IF v_date_examen IS NOT NULL THEN
+    RAISE date_deja_prise;
+  END IF;
+  
+  -- Récupérer la date de la première inscription à l'examen
+  SELECT MIN(i_date_examen)
+  INTO v_date_prem_exam
+  FROM inscription
+  WHERE e_id = id_eleve;
+  
+  -- Mettre à jour la ligne de la table INSCRIPTION pour renseigner la date de passage de l'examen
+  UPDATE inscription
+  SET i_date_examen = v_date_prem_exam + (v_age - 18) * 30
+  WHERE e_id = id_eleve;
+  
+  -- Archiver les données de l'élève qui a réussi le permis
+  INSERT INTO archive (e_id, e_nom, e_prenom, e_date_dossier, e_date_code, e_nb_km, e_nbh_lecons, a_nb_passages, a_date_prem_exam, a_date_obtention)
+  VALUES (id_eleve, (SELECT e_nom FROM eleve WHERE e_id = id_eleve), (SELECT e_prenom FROM eleve WHERE e_id = id_eleve), (SELECT e_date_dossier FROM eleve WHERE e_id = id_eleve), (SELECT e_date_code FROM eleve WHERE e_id = id_eleve), v_nb_km, v_nb_lecons, 1, v_date_prem_exam + (v_age - 18) * 30, SYSDATE);
+  
+  COMMIT;
+EXCEPTION
+  WHEN eleve_inconnu THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : Elève inconnu.');
+  WHEN pb_age THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : L''élève n''aura pas 18 ans à la date de passage de l''examen.');
+  WHEN pb_condition THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : L''élève ne satisfait pas les conditions concernant l''apprentissage.');
+  WHEN date_deja_prise THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : L''élève est déjà inscrit à l''examen.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : ' || SQLERRM);
+END inscrire_examen;
+/
+
+
+/* 8.3: Ecrire et tester la procédure resultat_examen qui
+▪ Si l'examen est obtenu, archive les informations concernant l'élève : insère une ligne dans ARCHIVE et supprime 
+toutes les données sur l'élève dans les autres tables.
+▪ Si l'examen est rate, modifie la ligne de la table INSCRIPTION qui correspond à cet élève et à ce passage d'examen 
+(i.e. la ligne dont le résultat vaut null).
+▪ Si l'examen est raté, et que le nombre d'inscriptions est un multiple de 5, annule l'obtention du code en mettant la date 
+du code a null dans la table ELEVE. */
+
+-- Procédure pour enregistrer le résultat de l'examen
+CREATE OR REPLACE PROCEDURE resultat_examen(id_eleve IN NUMBER, reussite IN BOOLEAN) AS
+  v_nb_passages NUMBER;
+  v_date_code DATE;
+BEGIN
+  -- Vérifier si l'élève existe
+  SELECT a_nb_passages, e_date_code
+  INTO v_nb_passages, v_date_code
+  FROM eleve
+  WHERE e_id = id_eleve;
+  
+  IF v_nb_passages IS NULL THEN
+    RAISE eleve_inconnu;
+  END IF;
+  
+  -- Si l'examen est réussi
+  IF reussite THEN
+    -- Archiver les données de l'élève qui a réussi le permis
+    INSERT INTO archive (e_id, e_nom, e_prenom, e_date_dossier, e_date_code, e_nb_km, e_nbh_lecons, a_nb_passages, a_date_prem_exam, a_date_obtention)
+    VALUES (id_eleve, (SELECT e_nom FROM eleve WHERE e_id = id_eleve), (SELECT e_prenom FROM eleve WHERE e_id = id_eleve), (SELECT e_date_dossier FROM eleve WHERE e_id = id_eleve), v_date_code, (SELECT e_nb_km FROM eleve WHERE e_id = id_eleve), (SELECT e_nbh_lecons FROM eleve WHERE e_id = id_eleve), v_nb_passages, (SELECT MIN(i_date_examen) FROM inscription WHERE e_id = id_eleve), SYSDATE);
+    
+    -- Supprimer toutes les données de l'élève dans les autres tables
+    DELETE FROM trajet WHERE e_id = id_eleve;
+    DELETE FROM lecon WHERE e_id = id_eleve;
+    DELETE FROM inscription WHERE e_id = id_eleve;
+    
+    -- Si le nombre d'inscriptions est un multiple de 5, annuler l'obtention du code
+    IF v_nb_passages > 0 AND MOD(v_nb_passages, 5) = 0 THEN
+      UPDATE eleve
+      SET e_date_code = NULL
+      WHERE e_id = id_eleve;
+    END IF;
+  ELSE -- Si l'examen est raté
+    -- Mettre à jour la ligne de la table INSCRIPTION pour renseigner le résultat de l'examen
+    UPDATE inscription
+    SET i_resultat = 'Échec'
+    WHERE e_id = id_eleve AND i_resultat IS NULL;
+  END IF;
+  
+  COMMIT;
+EXCEPTION
+  WHEN eleve_inconnu THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : Elève inconnu.');
+  WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('Erreur : ' || SQLERRM);
+END resultat_examen;
+/
+
+-- PARTIE 9  Package 
+--9.1
+
+
+CREATE OR REPLACE PACKAGE gestion_inscription AS
+  -- Procédure pour afficher les informations sur toutes les inscriptions
+  PROCEDURE afficher_toutes_inscriptions;
+
+  -- Fonction pour lister le nombre d'inscriptions enregistrées
+  FUNCTION nombre_inscriptions RETURN NUMBER;
+
+  -- Procédure pour afficher les informations sur une inscription à partir de son identifiant
+  PROCEDURE afficher_inscription_par_id(id_inscription IN NUMBER);
+
+  -- Procédure pour insérer une nouvelle inscription
+  PROCEDURE inserer_inscription(id_inscription IN NUMBER, date_inscr IN DATE, type_inscr IN VARCHAR2, date_examen IN DATE, resultat IN VARCHAR2, num_inscr IN VARCHAR2, id_eleve IN NUMBER);
+
+  -- Procédure pour supprimer une inscription à partir de son identifiant
+  PROCEDURE supprimer_inscription(id_inscription IN NUMBER);
+
+  -- Procédure pour modifier n'importe quelle donnée relative à une inscription à partir de son identifiant
+  PROCEDURE modifier_inscription(id_inscription IN NUMBER, champ_a_modifier IN VARCHAR2, nouvelle_valeur IN VARCHAR2);
+END gestion_inscription;
+
+
+CREATE OR REPLACE PACKAGE BODY gestion_inscription AS
+  -- Procédure pour afficher les informations sur toutes les inscriptions
+  PROCEDURE afficher_toutes_inscriptions IS
+  BEGIN
+    FOR insc IN (SELECT  FROM inscription) LOOP
+      DBMS_OUTPUT.PUT_LINE('ID Inscription '  insc.i_id  ', Date inscription '  TO_CHAR(insc.i_date_inscr, 'DD-MON-YYYY')  ', Type '  insc.i_type  ', Date examen '  TO_CHAR(insc.i_date_examen, 'DD-MON-YYYY')  ', Résultat '  insc.i_resultat  ', Numéro inscription '  insc.i_num  ', ID Élève '  insc.e_id);
+    END LOOP;
+  END afficher_toutes_inscriptions;
+
+  -- Fonction pour lister le nombre d'inscriptions enregistrées
+  FUNCTION nombre_inscriptions RETURN NUMBER IS
+    total_inscriptions NUMBER;
+  BEGIN
+    SELECT COUNT() INTO total_inscriptions FROM inscription;
+    RETURN total_inscriptions;
+  END nombre_inscriptions;
+
+  -- Procédure pour afficher les informations sur une inscription à partir de son identifiant
+  PROCEDURE afficher_inscription_par_id(id_inscription IN NUMBER) IS
+    insc inscription%ROWTYPE;
+  BEGIN
+    SELECT  INTO insc FROM inscription WHERE i_id = id_inscription;
+    DBMS_OUTPUT.PUT_LINE('ID Inscription '  insc.i_id  ', Date inscription '  TO_CHAR(insc.i_date_inscr, 'DD-MON-YYYY')  ', Type '  insc.i_type  ', Date examen '  TO_CHAR(insc.i_date_examen, 'DD-MON-YYYY')  ', Résultat '  insc.i_resultat  ', Numéro inscription '  insc.i_num  ', ID Élève '  insc.e_id);
+  END afficher_inscription_par_id;
+
+  -- Procédure pour insérer une nouvelle inscription
+  PROCÉDURE inserer_inscription(id_inscription IN NUMBER, date_inscr IN DATE, type_inscr IN VARCHAR2, date_examen IN DATE, resultat IN VARCHAR2, num_inscr IN VARCHAR2, id_eleve IN NUMBER) IS
+  BEGIN
+    INSERT INTO inscription (i_id, i_date_inscr, i_type, i_date_examen, i_resultat, i_num, e_id) VALUES (id_inscription, date_inscr, type_inscr, date_examen, resultat, num_inscr, id_eleve);
+    COMMIT;
+  END inserer_inscription;
+
+  -- Procédure pour supprimer une inscription à partir de son identifiant
+  PROCEDURE supprimer_inscription(id_inscription IN NUMBER) IS
+  BEGIN
+    DELETE FROM inscription WHERE i_id = id_inscription;
+    COMMIT;
+  END supprimer_inscription;
+
+  -- Procédure pour modifier n'importe quelle donnée relative à une inscription à partir de son identifiant
+  PROCEDURE modifier_inscription(id_inscription IN NUMBER, champ_a_modifier IN VARCHAR2, nouvelle_valeur IN VARCHAR2) IS
+  BEGIN
+    EXECUTE IMMEDIATE 'UPDATE inscription SET '  champ_a_modifier  ' = 1 WHERE i_id = 2' USING nouvelle_valeur, id_inscription;
+    COMMIT;
+  END modifier_inscription;
+END gestion_inscription;
+
+
+
+--9.2.
+
+CREATE OR REPLACE PACKAGE package_conduite AS
+  -- inscription à des cours de conduite en vue de passer le permis
+  PROCEDURE inscrire_conduite(id_eleve IN eleve.e_id%TYPE, la_date_inscr IN DATE DEFAULT SYSDATE, le_type IN inscription.i_type%TYPE);
+  
+  -- inscription à l'examen du permis d'un élève qui suit déjà des leçons
+  PROCEDURE inscrire_examen(id_eleve IN eleve.e_id%TYPE, la_date_examen IN DATE);
+  
+  -- on met à jour les résultats de l'examen du permis
+  PROCEDURE resultat_examen(id_eleve IN eleve.e_id%TYPE, le_resultat IN inscription.i_resultat%TYPE);
+
+  ELEVE_INCONNU EXCEPTION;
+  PRAGMA EXCEPTION_INIT(ELEVE_INCONNU, -20006);
+  
+  PAS_DE_CODE EXCEPTION;
+  PRAGMA EXCEPTION_INIT(PAS_DE_CODE, -20007);
+  
+  PB_AGE EXCEPTION;
+  PRAGMA EXCEPTION_INIT(PB_AGE, -20008);
+  
+  PB_CONDITION EXCEPTION;
+  PRAGMA EXCEPTION_INIT(PB_CONDITION, -20009);
+  
+  DATE_DEJA_PRISE EXCEPTION;
+  PRAGMA EXCEPTION_INIT(DATE_DEJA_PRISE, -20010);
+END package_conduite;
+
